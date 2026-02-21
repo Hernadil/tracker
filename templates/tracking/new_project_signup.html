@@ -1,0 +1,55 @@
+{% extends "tracking/base.html" %}
+{% block title %}Projekt Felvétele – Tracker{% endblock %}
+{% block content %}
+<div class="page-header">
+  <a href="{% url 'my_projects' %}" class="back-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></a>
+  <div><div class="page-title">Projekt Felvétele</div></div>
+</div>
+{% if confirm_project %}
+<div class="confirm-box">
+  <div class="card-title" style="margin-bottom:8px;">{{ confirm_project.title }}</div>
+  <div class="card-meta" style="margin-bottom:12px;">{{ confirm_project.company }}</div>
+  <div class="info-grid" style="margin-bottom:14px;">
+    <div><div class="info-key">Típus</div><div class="info-value">
+      {% if confirm_project.project_type == "video" %}Videós{% elif confirm_project.project_type == "photo" %}Fotós{% else %}Mindkettő{% endif %}
+    </div></div>
+    <div><div class="info-key">Helyszín</div><div class="info-value">{{ confirm_project.location|default:"–" }}</div></div>
+    {% if confirm_project.videographer_date %}<div><div class="info-key">Forgatás dátuma</div><div class="info-value">{{ confirm_project.videographer_date }}</div></div>{% endif %}
+    {% if confirm_project.photo_onsite_date %}<div><div class="info-key">Fotózás dátuma</div><div class="info-value">{{ confirm_project.photo_onsite_date }}</div></div>{% endif %}
+  </div>
+  <p>Biztosan csatlakozol ehhez a projekthez?</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+    <form method="post">{% csrf_token %}
+      <input type="hidden" name="project_id" value="{{ confirm_project.pk }}">
+      <input type="hidden" name="confirmed" value="1">
+      <button type="submit" class="btn btn-success">Igen, csatlakozom</button>
+    </form>
+    <a href="{% url 'new_project_signup' %}" class="btn btn-secondary">Mégse</a>
+  </div>
+</div>
+{% else %}
+<div class="section-header"><span class="section-title">Elérhető projektek ({{ available|length }})</span></div>
+{% for project in available %}
+<div class="card" style="margin-bottom:12px;">
+  <div class="card-header">
+    <div>
+      <div class="card-title">{{ project.title }}</div>
+      <div class="card-meta">{{ project.company }}</div>
+    </div>
+    {% if project.project_type == "video" %}<span class="badge badge-blue">Videós</span>
+    {% elif project.project_type == "photo" %}<span class="badge badge-orange">Fotós</span>
+    {% else %}<span class="badge badge-purple">Mindkettő</span>{% endif %}
+  </div>
+  <div class="info-grid" style="margin:10px 0;">
+    <div><div class="info-key">Helyszín</div><div class="info-value">{{ project.location|default:"–" }}</div></div>
+    {% if project.videographer_date %}<div><div class="info-key">Forgatás</div><div class="info-value">{{ project.videographer_date }}</div></div>{% endif %}
+    {% if project.photo_onsite_date %}<div><div class="info-key">Fotózás</div><div class="info-value">{{ project.photo_onsite_date }}</div></div>{% endif %}
+  </div>
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="project_id" value="{{ project.pk }}">
+    <button type="submit" class="btn btn-primary btn-sm">Kiválasztás</button>
+  </form>
+</div>
+{% empty %}<div class="empty-state"><p>Jelenleg nincs elérhető projekt számodra</p></div>{% endfor %}
+{% endif %}
+{% endblock %}

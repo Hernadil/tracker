@@ -1,0 +1,49 @@
+{% extends "tracking/base.html" %}
+{% block title %}Log – {{ project.title }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <a href="{% url 'project_page' project.pk %}" class="back-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></a>
+  <div>
+    <div class="page-title">{{ log.date|date:"Y. m. d. H:i" }}</div>
+    <div class="page-subtitle">{{ project.title }}</div>
+  </div>
+</div>
+<div class="stats-row">
+  <div class="stat-card blue"><div class="stat-value">{{ total_hours }} h</div><div class="stat-label">Összes óra a projektben</div></div>
+  <div class="stat-card orange"><div class="stat-value">{{ log.hours }} h</div><div class="stat-label">Ebben a logban</div></div>
+</div>
+{% if log.comment %}<div class="card" style="margin-bottom:18px;"><div class="form-section-title">Megjegyzés</div><p style="font-size:0.9rem;color:var(--text-secondary);">{{ log.comment }}</p></div>{% endif %}
+<div class="section-header"><span class="section-title">Feladatok ebben a logban</span></div>
+{% if user.job_role == "fotos" %}
+  {% if photo_progress %}
+  <div class="todo-item {% if photo_progress.fieldwork_done %}done{% endif %}">
+    <span>{% if photo_progress.fieldwork_done %}&#10003;{% else %}&#9651;{% endif %}</span>
+    <span class="todo-title">Terepmunka</span>
+    {% if photo_progress.fieldwork_done %}<span class="badge badge-green">Kész</span>{% endif %}
+  </div>
+  <div class="todo-item {% if photo_progress.editing_done %}done{% endif %}">
+    <span>{% if photo_progress.editing_done %}&#10003;{% else %}&#9651;{% endif %}</span>
+    <span class="todo-title">Szerkesztés</span>
+    {% if photo_progress.editing_done %}<span class="badge badge-green">Kész</span>{% endif %}
+  </div>
+  {% else %}<div class="empty-state"><p>Nincs fotós progress adat</p></div>{% endif %}
+{% elif user.job_role == "iro" %}
+  {% for action in video_actions %}
+  <div class="todo-item done">
+    <span style="color:var(--accent-purple);">&#9998;</span>
+    <span class="todo-title">{{ action.video_title.title }}</span>
+    <span class="badge badge-purple">Forgatókönyv</span>
+  </div>
+  {% empty %}<div class="empty-state"><p>Ekkor nem lett forgatókönyv hozzáadva</p></div>{% endfor %}
+{% else %}
+  {% for action in video_actions %}
+  <div class="todo-item done">
+    <span>&#10003;</span>
+    <span class="todo-title">{{ action.video_title.title }}</span>
+    <span class="badge {% if action.action_type == 'filmed' %}badge-blue{% else %}badge-green{% endif %}">
+      {% if action.action_type == "filmed" %}Leforgatva{% else %}Megvágva{% endif %}
+    </span>
+  </div>
+  {% empty %}<div class="empty-state"><p>Ebben a logban nincs feladat</p></div>{% endfor %}
+{% endif %}
+{% endblock %}

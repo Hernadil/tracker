@@ -1,0 +1,42 @@
+{% extends "tracking/base.html" %}
+{% block title %}Projektjeim – Tracker{% endblock %}
+{% block content %}
+<div class="page-header">
+  <a href="{% url 'home' %}" class="back-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></a>
+  <div><div class="page-title">Projektjeim</div></div>
+</div>
+<div class="section-header">
+  <span class="section-title">{{ project_data|length }} projekt</span>
+  {% if can_add %}
+  <a href="{% url 'new_project_signup' %}" class="btn btn-primary btn-sm">+ Új projekt felvétele</a>
+  {% else %}
+  <span style="font-size:0.8rem;color:var(--text-muted);">Max. 3 aktív projekt</span>
+  {% endif %}
+</div>
+{% for item in project_data %}
+{% if item.project.is_active %}
+<a href="{% url 'project_page' item.project.pk %}" class="card card-clickable" style="margin-bottom:12px;display:block;">
+{% else %}
+<div class="card expired" style="margin-bottom:12px;">
+{% endif %}
+  <div class="card-header">
+    <div>
+      <div class="card-title">{{ item.project.title }}</div>
+      <div class="card-meta">{{ item.project.company }}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+      {% if item.project.is_expired %}<span class="badge badge-gray">Lejárt</span>
+      {% elif item.project.is_completed %}<span class="badge badge-green">Kész</span>
+      {% else %}<span class="badge badge-blue">Aktív</span>{% endif %}
+      {% if item.project.project_type == "video" %}<span class="badge badge-blue" style="font-size:0.7rem;">Videós</span>
+      {% elif item.project.project_type == "photo" %}<span class="badge badge-orange" style="font-size:0.7rem;">Fotós</span>
+      {% else %}<span class="badge badge-purple" style="font-size:0.7rem;">Mindkettő</span>{% endif %}
+    </div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:{{ item.completion }}%"></div></div>
+  <div class="progress-text">{{ item.completion }}% kész{% if item.project.main_deadline %} · Határidő: {{ item.project.main_deadline }}{% endif %}</div>
+{% if item.project.is_active %}</a>{% else %}</div>{% endif %}
+{% empty %}
+<div class="empty-state"><p>Még nincsenek projektjeid</p></div>
+{% endfor %}
+{% endblock %}

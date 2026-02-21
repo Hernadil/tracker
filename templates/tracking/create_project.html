@@ -1,0 +1,76 @@
+{% extends "tracking/base.html" %}
+{% block title %}Projekt Létrehozása – Tracker{% endblock %}
+{% block content %}
+<div class="page-header">
+  <a href="{% url 'all_projects' %}" class="back-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></a>
+  <div><div class="page-title">Projekt Létrehozása</div></div>
+</div>
+<form method="post">{% csrf_token %}
+<div class="form-section">
+  <div class="form-section-title">Alapadatok</div>
+  <div class="form-group"><label class="form-label">{{ form.title.label }}</label>{{ form.title }}</div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">{{ form.company.label }}</label>{{ form.company }}</div>
+    <div class="form-group"><label class="form-label">{{ form.revenue.label }}</label>{{ form.revenue }}</div>
+  </div>
+  <div class="form-group"><label class="form-label">{{ form.description.label }}</label>{{ form.description }}</div>
+</div>
+<div class="form-section">
+  <div class="form-section-title">Típus és Helyszín</div>
+  <div class="checkbox-row" style="margin-bottom:14px;">
+    {{ form.both_types }}<label for="{{ form.both_types.id_for_label }}">{{ form.both_types.label }}</label>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">{{ form.project_type.label }}</label>{{ form.project_type }}</div>
+    <div class="form-group"><label class="form-label">{{ form.location.label }}</label>{{ form.location }}</div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">{{ form.required_video_count.label }}</label>{{ form.required_video_count }}</div>
+    <div class="form-group"><label class="form-label">{{ form.total_hours_expected.label }}</label>{{ form.total_hours_expected }}</div>
+  </div>
+  <div class="form-group"><label class="form-label">{{ form.onsite_hours.label }}</label>{{ form.onsite_hours }}</div>
+</div>
+<div class="form-section" id="video_deadlines">
+  <div class="form-section-title">Határidők – Videó</div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">{{ form.writer_deadline.label }}</label>{{ form.writer_deadline }}</div>
+    <div class="form-group"><label class="form-label">{{ form.editor_deadline.label }}</label>{{ form.editor_deadline }}</div>
+  </div>
+  <div class="form-group"><label class="form-label">{{ form.videographer_date.label }}</label>{{ form.videographer_date }}</div>
+</div>
+<div class="form-section" id="photo_deadlines">
+  <div class="form-section-title">Határidők – Fotó</div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">{{ form.photo_onsite_date.label }}</label>{{ form.photo_onsite_date }}</div>
+    <div class="form-group"><label class="form-label">{{ form.photo_editing_deadline.label }}</label>{{ form.photo_editing_deadline }}</div>
+  </div>
+</div>
+<div class="form-actions">
+  <button type="submit" class="btn btn-primary">Projekt létrehozása</button>
+  <a href="{% url 'all_projects' %}" class="btn btn-secondary">Mégse</a>
+</div>
+</form>
+{% endblock %}
+{% block extra_js %}
+<script>
+function updateDeadlineSections() {
+  const sel = document.getElementById("project_type_select");
+  const both = document.getElementById("id_both_types");
+  const vd = document.getElementById("video_deadlines");
+  const pd = document.getElementById("photo_deadlines");
+  if (!sel) return;
+  if (both && both.checked) { vd.style.display = "block"; pd.style.display = "block"; sel.disabled = true; return; }
+  if (both) sel.disabled = false;
+  const v = sel.value;
+  vd.style.display = (v === "video" || v === "both") ? "block" : "none";
+  pd.style.display = (v === "photo" || v === "both") ? "block" : "none";
+}
+document.addEventListener("DOMContentLoaded", function() {
+  updateDeadlineSections();
+  const sel = document.getElementById("project_type_select");
+  const both = document.getElementById("id_both_types");
+  if (sel) sel.addEventListener("change", updateDeadlineSections);
+  if (both) both.addEventListener("change", updateDeadlineSections);
+});
+</script>
+{% endblock %}

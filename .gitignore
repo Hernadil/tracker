@@ -1,0 +1,39 @@
+# General
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+
+# Virtual Environment
+env/
+venv/
+.env/
+.venv/
+Scripts/
+Lib/
+
+# Environment variables
+.env
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Temp files (Claude Code internal)
+tmpclaude-*
+test_file.txt
+test_script.sh
+create_templates.patch
+write_templates1.py

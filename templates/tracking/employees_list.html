@@ -1,0 +1,64 @@
+{% extends "tracking/base.html" %}
+{% block title %}Dolgozók – Tracker{% endblock %}
+{% block content %}
+<div class="page-header">
+  <a href="{% url 'boss_dashboard' %}" class="back-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></a>
+  <div>
+    <div class="page-title">Dolgozók</div>
+    <div class="page-subtitle">{{ employee_data|length }} fő</div>
+  </div>
+</div>
+<div class="search-wrap">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+  <input type="text" class="search-input" id="empSearch" placeholder="Dolgozó keresése..." value="{{ query }}" autocomplete="off">
+  <div class="autocomplete-dropdown" id="acDropdown"></div>
+</div>
+<div class="table-wrap">
+  <table class="data-table">
+    <thead><tr><th>Név</th><th>Munkakör</th><th>Havi órák</th><th>Havi bevétel</th></tr></thead>
+    <tbody>
+      {% for item in employee_data %}
+      <tr class="clickable" onclick="location='{% url 'employee_detail' item.employee.pk %}'">
+        <td><strong>{{ item.employee.get_full_name|default:item.employee.username }}</strong></td>
+        <td>
+          <span class="badge badge-gray">{{ item.employee.get_job_role_display_hu }}</span>
+          {% if item.employee.is_boss %}<span class="badge badge-orange" style="margin-left:4px;">Boss</span>{% endif %}
+        </td>
+        <td>{{ item.monthly_hours }} h</td>
+        <td>{{ item.monthly_revenue|default:0 }} Ft</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:32px;">Nincs találat</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+const inp = document.getElementById("empSearch");
+const dd = document.getElementById("acDropdown");
+let timer;
+inp.addEventListener("input", function() {
+  clearTimeout(timer);
+  const q = this.value.trim();
+  if (!q) { dd.classList.remove("show"); return; }
+  timer = setTimeout(() => {
+    fetch("/ajax/employees/?q=" + encodeURIComponent(q))
+      .then(r => r.json()).then(data => {
+        dd.innerHTML = "";
+        if (!data.results.length) { dd.classList.remove("show"); return; }
+        data.results.forEach(e => {
+          const d = document.createElement("div");
+          d.className = "autocomplete-item";
+          d.innerHTML = "<span class='name'>" + e.name + "</span><span class='role'>" + e.role + "</span>";
+          d.onclick = () => location = "/boss/employees/" + e.id + "/";
+          dd.appendChild(d);
+        });
+        dd.classList.add("show");
+      });
+  }, 200);
+});
+document.addEventListener("click", e => { if (!inp.contains(e.target)) dd.classList.remove("show"); });
+</script>
+{% endblock %}

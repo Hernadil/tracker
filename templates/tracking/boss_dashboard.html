@@ -1,0 +1,53 @@
+{% extends "tracking/base.html" %}
+{% block title %}Boss Panel – Tracker{% endblock %}
+{% block content %}
+<div class="page-header">
+  <a href="{% url 'home' %}" class="back-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></a>
+  <div>
+    <div class="page-title">Boss Panel</div>
+    <div class="page-subtitle">{{ month_name }} {{ year }}</div>
+  </div>
+</div>
+<div class="chart-container">
+  <div class="chart-header">
+    <span class="chart-title">Napi bevétel (Ft)</span>
+    <div class="chart-nav">
+      <a href="?month={{ prev_month }}&year={{ prev_year }}" class="btn btn-ghost btn-sm">&#8249;</a>
+      <span>{{ month_name }} {{ year }}</span>
+      <a href="?month={{ next_month }}&year={{ next_year }}" class="btn btn-ghost btn-sm">&#8250;</a>
+    </div>
+  </div>
+  <canvas id="revChart" height="80"></canvas>
+</div>
+<div class="grid-2" style="margin-bottom:14px;">
+  <a href="{% url 'employees_list' %}" class="card card-clickable">
+    <div class="card-header"><span class="card-title">Dolgozók mutatása</span><span>&#8594;</span></div>
+    <div class="card-meta">Összes dolgozó és statisztikáik</div>
+  </a>
+  <a href="{% url 'all_projects' %}" class="card card-clickable">
+    <div class="card-header"><span class="card-title">Projektek mutatása</span><span>&#8594;</span></div>
+    <div class="card-meta">Összes projekt áttekintése</div>
+  </a>
+</div>
+<div class="grid-2">
+  <a href="{% url 'new_employee' %}" class="card card-clickable">
+    <div class="card-header"><span class="card-title">+ Új dolgozó felvétele</span><span>&#8594;</span></div>
+    <div class="card-meta">Új munkatárs hozzáadása</div>
+  </a>
+  <a href="{% url 'create_project' %}" class="card card-clickable">
+    <div class="card-header"><span class="card-title">+ Projekt létrehozása</span><span>&#8594;</span></div>
+    <div class="card-meta">Új projekt indítása</div>
+  </a>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const data = {{ chart_data|safe }};
+new Chart(document.getElementById("revChart").getContext("2d"), {
+  type: "bar",
+  data: { labels: data.labels, datasets: [{ data: data.values, backgroundColor: "rgba(63,185,80,0.3)", borderColor: "rgba(63,185,80,0.8)", borderWidth: 1, borderRadius: 4 }] },
+  options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { color: "#21262d" }, ticks: { color: "#7d8590", maxTicksLimit: 10 } }, y: { grid: { color: "#21262d" }, ticks: { color: "#7d8590" }, beginAtZero: true } } }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "tracking/base.html" %}
+{% block title %}{{ employee.get_full_name|default:employee.username }} – Tracker{% endblock %}
+{% block content %}
+<div class="page-header">
+  <a href="{% url 'employees_list' %}" class="back-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></a>
+  <div>
+    <div class="page-title">{{ employee.get_full_name|default:employee.username }}</div>
+    <div class="page-subtitle">{{ employee.get_job_role_display_hu }}</div>
+  </div>
+</div>
+<div class="card" style="margin-bottom:20px;">
+  <div class="info-grid">
+    <div><div class="info-key">Email</div><div class="info-value">{{ employee.email|default:"–" }}</div></div>
+    <div><div class="info-key">Telefon</div><div class="info-value">{{ employee.phone_number|default:"–" }}</div></div>
+    <div><div class="info-key">Munkakör</div><div class="info-value">{{ employee.get_job_role_display_hu }}</div></div>
+    <div><div class="info-key">Jogosultság</div><div class="info-value">{% if employee.is_boss %}<span class="badge badge-orange">Boss</span>{% else %}Dolgozó{% endif %}</div></div>
+  </div>
+</div>
+<div class="section-header"><span class="section-title">Projektek ({{ project_data|length }})</span></div>
+{% for item in project_data %}
+<a href="{% url 'employee_project_view' employee.pk item.project.pk %}" class="card card-clickable {% if item.project.is_expired %}expired{% endif %}" style="margin-bottom:10px;display:block;">
+  <div class="card-header">
+    <div><div class="card-title">{{ item.project.title }}</div><div class="card-meta">{{ item.project.company }}</div></div>
+    <span class="badge {% if item.project.is_expired %}badge-gray{% elif item.project.is_completed %}badge-green{% else %}badge-blue{% endif %}">
+      {% if item.project.is_expired %}Lejárt{% elif item.project.is_completed %}Kész{% else %}Aktív{% endif %}
+    </span>
+  </div>
+  <div style="display:flex;gap:20px;">
+    <div><div class="info-key">Órák</div><div class="info-value">{{ item.hours }} h</div></div>
+    <div><div class="info-key">Bevétel</div><div class="info-value">{{ item.revenue }} Ft</div></div>
+  </div>
+</a>
+{% empty %}<div class="empty-state"><p>Nincs projekt</p></div>{% endfor %}
+{% endblock %}

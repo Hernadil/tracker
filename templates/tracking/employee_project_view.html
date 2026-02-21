@@ -1,0 +1,34 @@
+{% extends "tracking/base.html" %}
+{% block title %}{{ employee.get_full_name|default:employee.username }} – {{ project.title }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <a href="{% url 'employee_detail' employee.pk %}" class="back-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></a>
+  <div>
+    <div class="page-title">{{ project.title }}</div>
+    <div class="page-subtitle">{{ employee.get_full_name|default:employee.username }}</div>
+  </div>
+</div>
+<div class="card" style="margin-bottom:20px;">
+  <div class="info-grid">
+    <div><div class="info-key">Cég</div><div class="info-value">{{ project.company }}</div></div>
+    <div><div class="info-key">Helyszín</div><div class="info-value">{{ project.location|default:"–" }}</div></div>
+    <div><div class="info-key">Összes óra</div><div class="info-value" style="color:var(--accent-blue);font-weight:700;">{{ total_hours }} h</div></div>
+    <div><div class="info-key">Típus</div><div class="info-value">
+      {% if project.project_type == "video" %}<span class="badge badge-blue">Videós</span>
+      {% elif project.project_type == "photo" %}<span class="badge badge-orange">Fotós</span>
+      {% else %}<span class="badge badge-purple">Mindkettő</span>{% endif %}
+    </div></div>
+  </div>
+  {% if project.description %}<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-subtle);font-size:0.9rem;color:var(--text-secondary);">{{ project.description }}</div>{% endif %}
+</div>
+<div class="section-header"><span class="section-title">Logok ({{ logs|length }})</span></div>
+{% for log in logs %}
+<a href="{% url 'employee_log_view' employee.pk project.pk log.pk %}" class="log-item">
+  <div>
+    <div class="log-date">{{ log.date|date:"Y. m. d. H:i" }}</div>
+    {% if log.comment %}<div class="log-comment">{{ log.comment }}</div>{% endif %}
+  </div>
+  <div class="log-hours">{{ log.hours }} h</div>
+</a>
+{% empty %}<div class="empty-state"><p>Nincsenek logok</p></div>{% endfor %}
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "tracking/base.html" %}
+{% block title %}Főoldal – Tracker{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">Üdvözöljük, {{ user.get_full_name|default:user.username }}!</div>
+    <div class="page-subtitle">{{ month_name }} {{ year }}</div>
+  </div>
+</div>
+<div class="chart-container">
+  <div class="chart-header">
+    <span class="chart-title">{% if user.is_boss %}Napi bevétel (Ft){% else %}Napi ledolgozott órák{% endif %}</span>
+    <div class="chart-nav">
+      <a href="?month={{ prev_month }}&year={{ prev_year }}" class="btn btn-ghost btn-sm">&#8249;</a>
+      <span>{{ month_name }} {{ year }}</span>
+      <a href="?month={{ next_month }}&year={{ next_year }}" class="btn btn-ghost btn-sm">&#8250;</a>
+    </div>
+  </div>
+  <canvas id="mainChart" height="80"></canvas>
+</div>
+{% if user.is_boss %}
+<div class="grid-2">
+  <a href="{% url 'boss_dashboard' %}" class="card card-clickable">
+    <div class="card-header"><span class="card-title">Boss Panel</span><span>&#8594;</span></div>
+    <div class="card-meta">Bevételek, dolgozók, projektek</div>
+  </a>
+  <a href="{% url 'my_projects' %}" class="card card-clickable">
+    <div class="card-header"><span class="card-title">Projektjeim</span><span>&#8594;</span></div>
+    <div class="card-meta">Saját projektek és logok</div>
+  </a>
+</div>
+{% else %}
+<a href="{% url 'my_projects' %}" class="card card-clickable">
+  <div class="card-header"><span class="card-title">Projektjeim</span><span>&#8594;</span></div>
+  <div class="card-meta">Projektek megtekintése és logolás</div>
+</a>
+{% endif %}
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const data = {{ chart_data|safe }};
+new Chart(document.getElementById("mainChart").getContext("2d"), {
+  type: "bar",
+  data: { labels: data.labels, datasets: [{ data: data.values, backgroundColor: "rgba(88,166,255,0.3)", borderColor: "rgba(88,166,255,0.8)", borderWidth: 1, borderRadius: 4 }] },
+  options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { color: "#21262d" }, ticks: { color: "#7d8590", maxTicksLimit: 10 } }, y: { grid: { color: "#21262d" }, ticks: { color: "#7d8590" }, beginAtZero: true } } }
+});
+</script>
+{% endblock %}

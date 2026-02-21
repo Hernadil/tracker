@@ -1,0 +1,39 @@
+{% extends "tracking/base.html" %}
+{% block title %}Összes Projekt – Tracker{% endblock %}
+{% block content %}
+<div class="page-header">
+  <a href="{% url 'boss_dashboard' %}" class="back-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></a>
+  <div>
+    <div class="page-title">Összes Projekt</div>
+    <div class="page-subtitle">{{ project_data|length }} projekt</div>
+  </div>
+</div>
+<div class="table-wrap">
+  <table class="data-table">
+    <thead><tr><th>Cím</th><th>Cég</th><th>Típus</th><th>Határidő</th><th>Óra</th><th>Bevétel</th><th>Státusz</th></tr></thead>
+    <tbody>
+      {% for item in project_data %}
+      <tr class="clickable {% if item.project.is_expired %}expired{% endif %}" onclick="location='{% url 'boss_project_view' item.project.pk %}'">
+        <td><strong>{{ item.project.title }}</strong></td>
+        <td>{{ item.project.company }}</td>
+        <td>
+          {% if item.project.project_type == "video" %}<span class="badge badge-blue">Videós</span>
+          {% elif item.project.project_type == "photo" %}<span class="badge badge-orange">Fotós</span>
+          {% else %}<span class="badge badge-purple">Mindkettő</span>{% endif %}
+        </td>
+        <td>{{ item.project.main_deadline|default:"–" }}</td>
+        <td>{{ item.total_hours }} h</td>
+        <td>{{ item.project.revenue }} Ft</td>
+        <td>
+          {% if item.project.is_expired %}<span class="badge badge-gray">Lejárt</span>
+          {% elif item.project.is_completed %}<span class="badge badge-green">Kész</span>
+          {% else %}<span class="badge badge-blue">Aktív</span>{% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:32px;">Nincs projekt</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

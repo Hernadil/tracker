@@ -1,0 +1,107 @@
+{% extends "tracking/base.html" %}
+{% block title %}Új Log – {{ project.title }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <a href="{% url 'project_page' project.pk %}" class="back-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></a>
+  <div>
+    <div class="page-title">Új Log</div>
+    <div class="page-subtitle">{{ project.title }}</div>
+  </div>
+</div>
+<div class="stats-row">
+  <div class="stat-card blue"><div class="stat-value">{{ total_hours_so_far }} h</div><div class="stat-label">Eddig ledolgozva</div></div>
+</div>
+<form method="post">{% csrf_token %}
+
+{% if user_role == "iro" %}
+<div class="form-section">
+  <div class="form-section-title">Forgatókönyvek / Videó Ötletek</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <span style="font-size:0.85rem;color:var(--text-secondary);">{{ existing_titles|length }} / {{ total_needed }} cím létrehozva</span>
+  </div>
+  {% if all_titles %}
+  <div style="margin-bottom:14px;">
+    {% for t in all_titles %}
+    <div class="todo-item {% if t.editing_done %}done{% endif %}">
+      <span>{% if t.editing_done %}&#10003;{% elif t.raw_uploaded %}&#9675;{% else %}&#9651;{% endif %}</span>
+      <span class="todo-title">{{ t.title }}</span>
+      <span style="font-size:0.75rem;color:var(--text-muted);">{{ t.created_by.get_full_name|default:t.created_by.username }}</span>
+      {% if t.editing_done %}<span class="badge badge-green">Kész</span>
+      {% elif t.raw_uploaded %}<span class="badge badge-blue">Raw feltöltve</span>
+      {% else %}<span class="badge badge-gray">Vár</span>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% if can_add_more %}
+  <div id="titleEntries">
+    <div class="title-entry"><input type="text" name="new_titles[]" class="form-input" placeholder="Videó cím..."></div>
+  </div>
+  <button type="button" class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="addTitleEntry()">+ Cím hozzáadása</button>
+  {% else %}
+  <div class="alert alert-info">Elérted a {{ total_needed }} darabos limitet.</div>
+  {% endif %}
+</div>
+
+{% elif user_role == "videos" %}
+<div class="form-section">
+  <div class="form-section-title">Leforgatandó Videók</div>
+  {% for t in pending_titles %}
+  <div class="checkbox-row">
+    <input type="checkbox" name="filmed_titles[]" value="{{ t.pk }}" id="vt_{{ t.pk }}" class="form-checkbox">
+    <label for="vt_{{ t.pk }}">{{ t.title }}</label>
+    <span style="font-size:0.75rem;color:var(--text-muted);">{{ t.created_by.get_full_name|default:t.created_by.username }}</span>
+  </div>
+  {% empty %}<div class="empty-state" style="padding:20px;"><p>Nincs leforgatni való videó</p></div>{% endfor %}
+</div>
+
+{% elif user_role == "vago" %}
+<div class="form-section">
+  <div class="form-section-title">Vágandó Videók (Raw feltöltve)</div>
+  {% for t in available_titles %}
+  <div class="checkbox-row">
+    <input type="checkbox" name="edited_titles[]" value="{{ t.pk }}" id="vt_{{ t.pk }}" class="form-checkbox">
+    <label for="vt_{{ t.pk }}">{{ t.title }}</label>
+    <span style="font-size:0.75rem;color:var(--text-muted);">{{ t.raw_uploaded_by.get_full_name|default:t.raw_uploaded_by.username }}</span>
+  </div>
+  {% empty %}<div class="empty-state" style="padding:20px;"><p>Nincs vágásra kész videó</p></div>{% endfor %}
+</div>
+
+{% elif user_role == "fotos" %}
+<div class="form-section">
+  <div class="form-section-title">Fotós Feladatok</div>
+  <div class="checkbox-row">
+    <input type="checkbox" name="fieldwork_done" id="fw" class="form-checkbox">
+    <label for="fw">Terepmunka elvégezve</label>
+  </div>
+  <div class="checkbox-row">
+    <input type="checkbox" name="editing_done" id="ed" class="form-checkbox">
+    <label for="ed">Szerkesztés (editing) kész</label>
+  </div>
+</div>
+{% endif %}
+
+<div class="form-section">
+  <div class="form-section-title">Log adatok</div>
+  <div class="form-group"><label class="form-label">{{ form.hours.label }}</label>{{ form.hours }}{% for e in form.hours.errors %}<div class="form-error">{{ e }}</div>{% endfor %}</div>
+  <div class="form-group"><label class="form-label">{{ form.comment.label }}</label>{{ form.comment }}</div>
+</div>
+
+<div class="form-actions">
+  <button type="submit" class="btn btn-primary">Mentés</button>
+  <a href="{% url 'project_page' project.pk %}" class="btn btn-secondary">Mégse</a>
+</div>
+</form>
+{% endblock %}
+{% block extra_js %}
+<script>
+function addTitleEntry() {
+  const c = document.getElementById("titleEntries");
+  if (!c) return;
+  const d = document.createElement("div");
+  d.className = "title-entry";
+  d.innerHTML = "<input type='text' name='new_titles[]' class='form-input' placeholder='Videó cím...'><button type='button' class='btn btn-ghost btn-sm' onclick='this.parentNode.remove()'>&#10005;</button>";
+  c.appendChild(d);
+}
+</script>
+{% endblock %}
