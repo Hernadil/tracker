@@ -31,9 +31,15 @@
           {% else %}<span class="badge badge-blue">Aktív</span>{% endif %}
         </td>
         <td onclick="event.stopPropagation();">
-          {% if item.project.is_completed and not item.project.is_expired %}
-          <a href="{% url 'delete_project' item.project.pk %}" class="btn btn-sm btn-danger">Törlés</a>
-          {% endif %}
+          <div class="action-buttons">
+            <a href="{% url 'edit_project' item.project.pk %}" class="btn btn-sm btn-ghost">Szerkesztés</a>
+            <a href="{% url 'delete_project' item.project.pk %}" class="btn btn-sm btn-danger">Törlés</a>
+            {% if not item.project.is_completed and not item.project.is_expired %}
+            <form method="post" action="{% url 'boss_project_view' item.project.pk %}" style="display:inline;">{% csrf_token %}
+              <button type="submit" name="complete_project" class="btn btn-sm btn-danger" onclick="return confirm('Biztosan lezárod a projektet?')">Lezárás</button>
+            </form>
+            {% endif %}
+          </div>
         </td>
       </tr>
       {% empty %}

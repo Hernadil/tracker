@@ -37,6 +37,16 @@ class Project(models.Model):
     description = models.TextField(blank=True, null=True)
     required_video_count = models.PositiveIntegerField(default=0)
 
+    max_writer_count = models.PositiveIntegerField(default=0)
+    max_photographer_count = models.PositiveIntegerField(default=0)
+    max_videographer_count = models.PositiveIntegerField(default=0)
+    max_editor_count = models.PositiveIntegerField(default=0)
+
+    pay_writer = models.DecimalField(max_digits=12, decimal_places=0, default=0)
+    pay_photographer = models.DecimalField(max_digits=12, decimal_places=0, default=0)
+    pay_videographer = models.DecimalField(max_digits=12, decimal_places=0, default=0)
+    pay_editor = models.DecimalField(max_digits=12, decimal_places=0, default=0)
+
     writer_deadline = models.DateField(blank=True, null=True)
     editor_deadline = models.DateField(blank=True, null=True)
     videographer_date = models.DateField(blank=True, null=True)
@@ -85,44 +95,85 @@ class Project(models.Model):
     def completion_percentage_for_user(self, user):
         if user.job_role == 'iro':
             total = self.required_video_count
-            if total == 0: return 0
-            done = self.video_titles.filter(created_by=user).count()
+            if total == 0:
+                return 0
+            done = self.video_titles.count()
             return min(int((done / total) * 100), 100)
-        elif user.job_role == 'fotos':
-            logs = self.logs.filter(user=user)
-            if not logs.exists(): return 0
-            total = logs.count() * 2
-            done = 0
-            for log in logs:
-                try:
-                    p = log.photo_progress
-                    if p.fieldwork_done: done += 1
-                    if p.editing_done: done += 1
-                except: pass
-            return min(int((done / total) * 100), 100) if total > 0 else 0
-        elif user.job_role == 'videos':
+        if user.job_role == 'videos':
             total = self.video_titles.count()
-            if total == 0: return 0
+            if total == 0:
+                return 0
             done = self.video_titles.filter(raw_uploaded=True).count()
             return min(int((done / total) * 100), 100)
-        elif user.job_role == 'vago':
-            total = self.video_titles.filter(raw_uploaded=True).count()
-            if total == 0: return 0
+        if user.job_role == 'vago':
+            total = self.video_titles.count()
+            if total == 0:
+                return 0
             done = self.video_titles.filter(editing_done=True).count()
             return min(int((done / total) * 100), 100)
+        if user.job_role == 'fotos':
+            last_log = self.logs.filter(user=user).order_by('-date').first()
+            if not last_log or not hasattr(last_log, 'photo_progress'):
+                return 0
+            p = last_log.photo_progress
+            return 100 if (p.fieldwork_done and p.editing_done) else 0
         return 0
+
+    def role_max_for(self, role):
+        return {
+            'iro': self.max_writer_count,
+            'fotos': self.max_photographer_count,
+            'videos': self.max_videographer_count,
+            'vago': self.max_editor_count,
+        }.get(role, 0)
+
+    def role_pay_for(self, role):
+        return {
+            'iro': self.pay_writer,
+            'fotos': self.pay_photographer,
+            'videos': self.pay_videographer,
+            'vago': self.pay_editor,
+        }.get(role, 0)
+
+    def role_slots_taken(self, role):
+        return self.memberships.filter(user__job_role=role).count()
+
+    def role_has_capacity(self, role):
+        max_count = self.role_max_for(role)
+        return max_count > self.role_slots_taken(role)
+
+    def is_writer_team_done(self):
+        if self.project_type not in ('video', 'both'):
+            return True
+        if self.required_video_count <= 0:
+            return False
+        return self.video_titles.count() >= self.required_video_count
+
+    def is_videographer_team_done(self):
+        if self.project_type not in ('video', 'both'):
+            return True
+        total = self.video_titles.count()
+        if total == 0:
+            return False
+        return self.video_titles.filter(raw_uploaded=True).count() == total
+
+    def is_editor_team_done(self):
+        if self.project_type not in ('video', 'both'):
+            return True
+        total = self.video_titles.count()
+        if total == 0:
+            return False
+        return self.video_titles.filter(editing_done=True).count() == total
 
     def is_boss_done_videos(self):
         """Boss jelzés: összes video_title kiyomva-e a vágó által"""
         if self.project_type not in ('video', 'both'):
-            return True  # Ha nincs videó, akkor "done" ebből a szempontból
-        
-        # Csak az ÖSSZES video_title-nek editing_done=True-nak kell lenni
-        all_titles = self.video_titles.all()
-        if not all_titles.exists():
-            return False  # Ha nincs title, még nem kész
-        
-        return all_titles.filter(editing_done=True).count() == all_titles.count()
+            return True
+        return (
+            self.is_writer_team_done()
+            and self.is_videographer_team_done()
+            and self.is_editor_team_done()
+        )
 
     def is_boss_done_photos(self):
         """Boss jelzés: összes fotósnak mindkét processt kitöltötten-e"""
@@ -130,19 +181,16 @@ class Project(models.Model):
             return True  # Ha nincs fotó, akkor "done" ebből a szempontból
         
         # Meg kell nézni az összes fotónál a logok photo_progress-t
-        photo_logs = self.logs.filter(user__job_role='fotos')
-        if not photo_logs.exists():
-            return False  # Ha nincs fotó log, még nem kész
-        
-        # Összes fotó lognak mindkét processt teljesítenie kell
-        for log in photo_logs:
-            try:
-                p = log.photo_progress
-                if not (p.fieldwork_done and p.editing_done):
-                    return False
-            except:
-                return False  # Ha nincs photo_progress, nem kész
-        
+        photo_users = CustomUser.objects.filter(memberships__project=self, job_role='fotos').distinct()
+        if not photo_users.exists():
+            return False
+        for user in photo_users:
+            last_log = self.logs.filter(user=user).order_by('-date').first()
+            if not last_log or not hasattr(last_log, 'photo_progress'):
+                return False
+            p = last_log.photo_progress
+            if not (p.fieldwork_done and p.editing_done):
+                return False
         return True
 
     def is_boss_done(self):

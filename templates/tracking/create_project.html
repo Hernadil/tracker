@@ -38,6 +38,28 @@
   </div>
   <div class="form-group"><label class="form-label">{{ form.videographer_date.label }}</label>{{ form.videographer_date }}</div>
 </div>
+<div class="form-section">
+  <div class="form-section-title">Munkakörök létszám és díj</div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">{{ form.max_writer_count.label }}</label>{{ form.max_writer_count }}</div>
+    <div class="form-group"><label class="form-label">{{ form.pay_writer.label }}</label>{{ form.pay_writer }}</div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">{{ form.max_videographer_count.label }}</label>{{ form.max_videographer_count }}</div>
+    <div class="form-group"><label class="form-label">{{ form.pay_videographer.label }}</label>{{ form.pay_videographer }}</div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">{{ form.max_editor_count.label }}</label>{{ form.max_editor_count }}</div>
+    <div class="form-group"><label class="form-label">{{ form.pay_editor.label }}</label>{{ form.pay_editor }}</div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">{{ form.max_photographer_count.label }}</label>{{ form.max_photographer_count }}</div>
+    <div class="form-group"><label class="form-label">{{ form.pay_photographer.label }}</label>{{ form.pay_photographer }}</div>
+  </div>
+  {% if form.non_field_errors %}
+  <div class="form-error">{{ form.non_field_errors.0 }}</div>
+  {% endif %}
+</div>
 <div class="form-section" id="photo_deadlines">
   <div class="form-section-title">Határidők – Fotó</div>
   <div class="form-row">

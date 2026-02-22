@@ -234,11 +234,15 @@ def new_project_signup_view(request):
     # Videó típusú projektekhez: videósok, írók és vágók
     if user.job_role in ("videos", "iro", "vago"):
         available = [p for p in Project.objects.filter(project_type__in=("video", "both")).exclude(memberships__user=user)
-                     if not p.is_expired and (not p.videographer_date or p.videographer_date not in occupied)]
+                     if not p.is_expired and not p.is_completed
+                     and (not p.videographer_date or p.videographer_date not in occupied)
+                     and p.role_has_capacity(user.job_role)]
     # Fotó típusú projektekhez: fotósok
     elif user.job_role == "fotos":
         available = [p for p in Project.objects.filter(project_type__in=("photo", "both")).exclude(memberships__user=user)
-                     if not p.is_expired and (not p.photo_onsite_date or p.photo_onsite_date not in occupied)]
+                     if not p.is_expired and not p.is_completed
+                     and (not p.photo_onsite_date or p.photo_onsite_date not in occupied)
+                     and p.role_has_capacity(user.job_role)]
     else:
         available = []
     confirm_project = None
@@ -247,6 +251,9 @@ def new_project_signup_view(request):
         confirmed = request.POST.get("confirmed")
         if project_id and confirmed:
             proj = get_object_or_404(Project, pk=project_id)
+            if not proj.role_has_capacity(user.job_role):
+                messages.error(request, "Erre a munkakörre már betelt a létszám ebben a projektben.")
+                return redirect("new_project_signup")
             ProjectMembership.objects.get_or_create(user=user, project=proj)
             messages.success(request, "Sikeresen csatlakoztál a projekthez.")
             return redirect("my_projects")
@@ -299,7 +306,8 @@ def new_log_view(request, project_id):
                 for t in request.POST.getlist("new_titles[]"):
                     t = t.strip()
                     if t:
-                        VideoTitle.objects.create(project=project, title=t, created_by=user)
+                        if not VideoTitle.objects.filter(project=project, title__iexact=t).exists():
+                            VideoTitle.objects.create(project=project, title=t, created_by=user)
             elif user.job_role == "videos":
                 for tid in request.POST.getlist("filmed_titles[]"):
                     try:
@@ -374,9 +382,9 @@ def _monthly_revenue(year, month):
     for day in range(1, days + 1):
         d = date(year, month, day)
         rev = 0
-        for log in Log.objects.filter(date__date=d).select_related("project"):
+        for log in Log.objects.filter(date__date=d, project__is_completed=True).select_related("project"):
             # Az összes munkaórát az adott projekthez használjuk az elosztáshoz
-            total_hours = Log.objects.filter(project=log.project).aggregate(t=Sum("hours"))["t"] or 1
+            total_hours = Log.objects.filter(project=log.project, project__is_completed=True).aggregate(t=Sum("hours"))["t"] or 1
             rev += float(log.hours) / float(total_hours) * float(log.project.revenue)
         labels.append(f"{day}.")
         values.append(round(rev))
@@ -518,8 +526,8 @@ def _monthly_profit(year, month):
         rev = 0
         
         # Bevétel kiszámítása az adott napra
-        for log in Log.objects.filter(date__date=d).select_related("project"):
-            total_hours = Log.objects.filter(project=log.project).aggregate(t=Sum("hours"))["t"] or 1
+        for log in Log.objects.filter(date__date=d, project__is_completed=True).select_related("project"):
+            total_hours = Log.objects.filter(project=log.project, project__is_completed=True).aggregate(t=Sum("hours"))["t"] or 1
             rev += float(log.hours) / float(total_hours) * float(log.project.revenue)
         
         # Kiadások összesen az adott napon
@@ -571,8 +579,8 @@ def _month_revenue_value(year, month):
     for day in range(1, days + 1):
         d = date(year, month, day)
         
-        for log in Log.objects.filter(date__date=d).select_related("project"):
-            total_hours = Log.objects.filter(project=log.project).aggregate(t=Sum("hours"))["t"] or 1
+        for log in Log.objects.filter(date__date=d, project__is_completed=True).select_related("project"):
+            total_hours = Log.objects.filter(project=log.project, project__is_completed=True).aggregate(t=Sum("hours"))["t"] or 1
             revenue += float(log.hours) / float(total_hours) * float(log.project.revenue)
     
     return revenue

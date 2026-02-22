@@ -52,6 +52,8 @@ class CreateProjectForm(forms.ModelForm):
             'title', 'company', 'revenue', 'project_type', 'location', 'description',
             'required_video_count', 'writer_deadline', 'editor_deadline', 'videographer_date',
             'photo_onsite_date', 'photo_editing_deadline', 'onsite_hours', 'total_hours_expected',
+            'max_writer_count', 'max_videographer_count', 'max_editor_count', 'max_photographer_count',
+            'pay_writer', 'pay_videographer', 'pay_editor', 'pay_photographer',
         ]
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Projekt cím'}),
@@ -68,6 +70,14 @@ class CreateProjectForm(forms.ModelForm):
             'photo_editing_deadline': forms.DateInput(attrs={'class': 'form-input', 'type': 'date'}),
             'onsite_hours': forms.NumberInput(attrs={'class': 'form-input', 'placeholder': '0'}),
             'total_hours_expected': forms.NumberInput(attrs={'class': 'form-input', 'placeholder': '0'}),
+            'max_writer_count': forms.NumberInput(attrs={'class': 'form-input', 'placeholder': '0', 'min': '0'}),
+            'max_videographer_count': forms.NumberInput(attrs={'class': 'form-input', 'placeholder': '0', 'min': '0'}),
+            'max_editor_count': forms.NumberInput(attrs={'class': 'form-input', 'placeholder': '0', 'min': '0'}),
+            'max_photographer_count': forms.NumberInput(attrs={'class': 'form-input', 'placeholder': '0', 'min': '0'}),
+            'pay_writer': forms.NumberInput(attrs={'class': 'form-input', 'placeholder': '0', 'min': '0'}),
+            'pay_videographer': forms.NumberInput(attrs={'class': 'form-input', 'placeholder': '0', 'min': '0'}),
+            'pay_editor': forms.NumberInput(attrs={'class': 'form-input', 'placeholder': '0', 'min': '0'}),
+            'pay_photographer': forms.NumberInput(attrs={'class': 'form-input', 'placeholder': '0', 'min': '0'}),
         }
         labels = {
             'title': 'Projekt cím', 'company': 'Cég', 'revenue': 'Teljes bevétel (Ft)',
@@ -77,6 +87,14 @@ class CreateProjectForm(forms.ModelForm):
             'videographer_date': 'Forgatás dátuma', 'photo_onsite_date': 'Fotózás dátuma',
             'photo_editing_deadline': 'Fotó szerkesztési határidő',
             'onsite_hours': 'Helyszíni órák', 'total_hours_expected': 'Összes elvárható óra',
+            'max_writer_count': 'Forgatókönyv írók max. létszám',
+            'max_videographer_count': 'Videósok max. létszám',
+            'max_editor_count': 'Vágók max. létszám',
+            'max_photographer_count': 'Fotósok max. létszám',
+            'pay_writer': 'Forgatókönyv író díja / fő (Ft)',
+            'pay_videographer': 'Videós díja / fő (Ft)',
+            'pay_editor': 'Vágó díja / fő (Ft)',
+            'pay_photographer': 'Fotós díja / fő (Ft)',
         }
         
     def clean(self):
@@ -89,6 +107,27 @@ class CreateProjectForm(forms.ModelForm):
         if project_type == 'photo' and not both_types:
             if required_video_count is None or required_video_count == 0:
                 cleaned_data['required_video_count'] = 0
+
+        revenue = cleaned_data.get('revenue') or 0
+        max_writer_count = cleaned_data.get('max_writer_count') or 0
+        max_videographer_count = cleaned_data.get('max_videographer_count') or 0
+        max_editor_count = cleaned_data.get('max_editor_count') or 0
+        max_photographer_count = cleaned_data.get('max_photographer_count') or 0
+        pay_writer = cleaned_data.get('pay_writer') or 0
+        pay_videographer = cleaned_data.get('pay_videographer') or 0
+        pay_editor = cleaned_data.get('pay_editor') or 0
+        pay_photographer = cleaned_data.get('pay_photographer') or 0
+
+        total_allocated = (
+            max_writer_count * pay_writer
+            + max_videographer_count * pay_videographer
+            + max_editor_count * pay_editor
+            + max_photographer_count * pay_photographer
+        )
+        if total_allocated > revenue:
+            raise forms.ValidationError(
+                "A munkakörök összesített költsége nem lehet nagyobb a teljes bevételnél."
+            )
         
         return cleaned_data
 

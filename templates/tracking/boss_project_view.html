@@ -28,13 +28,23 @@
   </div>
   {% if project.description %}<p style="font-size:0.9rem;color:var(--text-secondary);margin-top:12px;">{{ project.description }}</p>{% endif %}
 </div>
-{% if not project.is_completed and not project.is_expired %}
-<div style="margin-bottom:20px;">
+<div class="card" style="margin-bottom:20px;">
+  <div class="info-grid">
+    <div><div class="info-key">Írók</div><div class="info-value">{{ project.max_writer_count }} fő · {{ project.pay_writer }} Ft</div></div>
+    <div><div class="info-key">Videósok</div><div class="info-value">{{ project.max_videographer_count }} fő · {{ project.pay_videographer }} Ft</div></div>
+    <div><div class="info-key">Vágók</div><div class="info-value">{{ project.max_editor_count }} fő · {{ project.pay_editor }} Ft</div></div>
+    <div><div class="info-key">Fotósok</div><div class="info-value">{{ project.max_photographer_count }} fő · {{ project.pay_photographer }} Ft</div></div>
+  </div>
+</div>
+<div style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
+  <a href="{% url 'edit_project' project.pk %}" class="btn btn-secondary">Projekt szerkesztése</a>
+  <a href="{% url 'delete_project' project.pk %}" class="btn btn-danger">Projekt törlése</a>
+  {% if not project.is_completed and not project.is_expired %}
   <form method="post">{% csrf_token %}
     <button type="submit" name="complete_project" class="btn btn-danger" onclick="return confirm('Biztosan lezárod a projektet?')">Projekt lezárása</button>
   </form>
+  {% endif %}
 </div>
-{% endif %}
 {% for role, members in members_by_role.items %}
 <div class="section-header"><span class="section-title">{{ role }}</span></div>
 {% for member in members %}

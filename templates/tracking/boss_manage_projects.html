@@ -25,6 +25,9 @@
           <div class="action-buttons">
             <a href="{% url 'edit_project' item.project.pk %}" class="btn btn-sm btn-ghost">Szerkesztés</a>
             <a href="{% url 'delete_project' item.project.pk %}" class="btn btn-sm btn-danger">Törlés</a>
+            <form method="post" action="{% url 'boss_project_view' item.project.pk %}" style="display:inline;">{% csrf_token %}
+              <button type="submit" name="complete_project" class="btn btn-sm btn-danger" onclick="return confirm('Biztosan lezárod a projektet?')">Lezárás</button>
+            </form>
           </div>
         </td>
       </tr>
