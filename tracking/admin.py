@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import (
     CustomUser, Project, ProjectMembership, VideoTitle,
-    Log, LogVideoTitleAction, PhotoLogProgress
+    Log, LogVideoTitleAction, PhotoLogProgress, Expense
 )
 
 @admin.register(CustomUser)
@@ -37,6 +37,12 @@ class VideoTitleAdmin(admin.ModelAdmin):
 class LogAdmin(admin.ModelAdmin):
     list_display = ("user", "project", "date", "hours")
     list_filter = ("project", "user")
+
+@admin.register(Expense)
+class ExpenseAdmin(admin.ModelAdmin):
+    list_display = ("amount", "description", "date", "created_by")
+    list_filter = ("date", "created_by")
+    search_fields = ("description",)
 
 admin.site.register(LogVideoTitleAction)
 admin.site.register(PhotoLogProgress)

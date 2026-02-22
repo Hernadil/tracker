@@ -20,7 +20,8 @@
     <div><div class="info-key">Főhatáridő</div><div class="info-value">{{ project.main_deadline|default:"–" }}</div></div>
     <div><div class="info-key">Bevétel</div><div class="info-value">{{ project.revenue }} Ft</div></div>
     <div><div class="info-key">Státusz</div><div class="info-value">
-      {% if project.is_completed %}<span class="badge badge-green">Kész</span>
+      {% if project.is_completed %}<span class="badge badge-green">✓ Lezárva</span>
+      {% elif project.is_boss_done %}<span class="badge badge-green">✓ Kész</span>
       {% elif project.is_expired %}<span class="badge badge-gray">Lejárt</span>
       {% else %}<span class="badge badge-blue">Aktív</span>{% endif %}
     </div></div>

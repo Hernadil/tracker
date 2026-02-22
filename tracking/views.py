@@ -11,11 +11,11 @@ import json
 
 from .models import (
     CustomUser, Project, ProjectMembership, VideoTitle,
-    Log, LogVideoTitleAction, PhotoLogProgress
+    Log, LogVideoTitleAction, PhotoLogProgress, Expense
 )
 from .forms import (
     LoginForm, CustomPasswordChangeForm, NewEmployeeForm,
-    CreateProjectForm, NewLogForm
+    CreateProjectForm, NewLogForm, ExpenseForm, EditProjectForm
 )
 
 
@@ -102,8 +102,20 @@ def employees_list_view(request):
     data = []
     for emp in qs:
         mh = emp.logs.filter(date__month=today.month, date__year=today.year).aggregate(t=Sum("hours"))["t"] or 0
-        data.append({"employee": emp, "monthly_hours": mh, "monthly_revenue": _emp_revenue(emp, today.month, today.year)})
+        data.append({"employee": emp, "monthly_hours": mh})
     return render(request, "tracking/employees_list.html", {"employee_data": data, "query": query})
+
+
+@boss_required
+def delete_employee_view(request, employee_id):
+    """Dolgozó törlése"""
+    employee = get_object_or_404(CustomUser, pk=employee_id)
+    if request.method == "POST":
+        employee.delete()
+        messages.success(request, f"'{employee.get_full_name() or employee.username}' dolgozó sikeresen törölve.")
+        return redirect("employees_list")
+    
+    return render(request, "tracking/delete_employee.html", {"employee": employee})
 
 
 @boss_required
@@ -113,7 +125,7 @@ def employee_detail_view(request, employee_id):
     for m in ProjectMembership.objects.filter(user=employee).select_related("project"):
         proj = m.project
         hours = proj.logs.filter(user=employee).aggregate(t=Sum("hours"))["t"] or 0
-        project_data.append({"project": proj, "hours": hours, "revenue": _emp_proj_revenue(employee, proj)})
+        project_data.append({"project": proj, "hours": hours})
     return render(request, "tracking/employee_detail.html", {"employee": employee, "project_data": project_data})
 
 
@@ -166,7 +178,7 @@ def boss_project_view(request, project_id):
             "user": m.user, "logs": user_logs,
             "total_hours": user_logs.aggregate(t=Sum("hours"))["t"] or 0,
         })
-    return render(request, "tracking/boss_project_view.html", {"project": project, "members_by_role": members_by_role})
+    return render(request, "tracking/boss_project_view.html", {"project": project, "members_by_role": members_by_role, "project_revenue": project.revenue})
 
 
 @boss_required
@@ -205,8 +217,12 @@ def my_projects_view(request):
 @login_required
 def new_project_signup_view(request):
     user = request.user
-    if user.job_role not in ("videos", "fotos"):
-        messages.error(request, "Csak videósok és fotósok vehetnek fel új projektet.")
+    # Boss nem vehet fel projektet
+    if user.is_boss:
+        messages.error(request, "Boss felhasználók nem vehetnek fel új projektet.")
+        return redirect("home")
+    if user.job_role not in ("videos", "fotos", "iro", "vago"):
+        messages.error(request, "Csak videósok, fotósok, forgatókönyv írók és vágók vehetnek fel új projektet.")
         return redirect("my_projects")
     my_memberships = ProjectMembership.objects.filter(user=user).select_related("project")
     occupied = set()
@@ -215,12 +231,16 @@ def new_project_signup_view(request):
             occupied.add(m.project.videographer_date)
         if m.project.photo_onsite_date:
             occupied.add(m.project.photo_onsite_date)
-    if user.job_role == "videos":
+    # Videó típusú projektekhez: videósok, írók és vágók
+    if user.job_role in ("videos", "iro", "vago"):
         available = [p for p in Project.objects.filter(project_type__in=("video", "both")).exclude(memberships__user=user)
                      if not p.is_expired and (not p.videographer_date or p.videographer_date not in occupied)]
-    else:
+    # Fotó típusú projektekhez: fotósok
+    elif user.job_role == "fotos":
         available = [p for p in Project.objects.filter(project_type__in=("photo", "both")).exclude(memberships__user=user)
                      if not p.is_expired and (not p.photo_onsite_date or p.photo_onsite_date not in occupied)]
+    else:
+        available = []
     confirm_project = None
     if request.method == "POST":
         project_id = request.POST.get("project_id")
@@ -355,8 +375,9 @@ def _monthly_revenue(year, month):
         d = date(year, month, day)
         rev = 0
         for log in Log.objects.filter(date__date=d).select_related("project"):
-            if log.project.total_hours_expected > 0:
-                rev += float(log.hours) / float(log.project.total_hours_expected) * float(log.project.revenue)
+            # Az összes munkaórát az adott projekthez használjuk az elosztáshoz
+            total_hours = Log.objects.filter(project=log.project).aggregate(t=Sum("hours"))["t"] or 1
+            rev += float(log.hours) / float(total_hours) * float(log.project.revenue)
         labels.append(f"{day}.")
         values.append(round(rev))
     return {"labels": labels, "values": values}
@@ -374,14 +395,203 @@ def _user_daily_hours(user, year, month):
 
 def _emp_revenue(emp, month, year):
     total = 0
-    for log in emp.logs.filter(date__month=month, date__year=year).select_related("project"):
-        if log.project.total_hours_expected > 0:
-            total += float(log.hours) / float(log.project.total_hours_expected) * float(log.project.revenue)
+    # Csoportosítás projektenként
+    projects = set(log.project_id for log in emp.logs.filter(date__month=month, date__year=year))
+    for project_id in projects:
+        project = Project.objects.get(pk=project_id)
+        emp_hours = Log.objects.filter(user=emp, project=project, date__month=month, date__year=year).aggregate(t=Sum("hours"))["t"] or 0
+        total_hours = Log.objects.filter(project=project).aggregate(t=Sum("hours"))["t"] or 0
+        if total_hours > 0:
+            total += float(emp_hours) / float(total_hours) * float(project.revenue)
     return round(total)
 
 
 def _emp_proj_revenue(emp, project):
-    h = Log.objects.filter(user=emp, project=project).aggregate(t=Sum("hours"))["t"] or 0
-    if project.total_hours_expected > 0:
-        return round(float(h) / float(project.total_hours_expected) * float(project.revenue))
+    emp_hours = Log.objects.filter(user=emp, project=project).aggregate(t=Sum("hours"))["t"] or 0
+    total_hours = Log.objects.filter(project=project).aggregate(t=Sum("hours"))["t"] or 0
+    if total_hours > 0:
+        return round(float(emp_hours) / float(total_hours) * float(project.revenue))
     return 0
+
+
+@boss_required
+def boss_manage_projects_view(request):
+    """Boss oldal projektek szerkesztéshez és törléséhez"""
+    active_projects = Project.objects.filter(is_completed=False).order_by("-created_at")
+    completed_projects = Project.objects.filter(is_completed=True).order_by("-created_at")
+    
+    active_data = [{"project": p, "total_hours": p.total_logged_hours()} for p in active_projects]
+    completed_data = [{"project": p, "total_hours": p.total_logged_hours()} for p in completed_projects]
+    
+    return render(request, "tracking/boss_manage_projects.html", {
+        "active_data": active_data,
+        "completed_data": completed_data,
+    })
+
+
+@boss_required
+def edit_project_view(request, project_id):
+    """Projekt szerkesztés (pénz, leírás)"""
+    project = get_object_or_404(Project, pk=project_id)
+    form = EditProjectForm(request.POST or None, instance=project)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Projekt sikeresen módosítva.")
+        return redirect("boss_manage_projects")
+    
+    members_count = ProjectMembership.objects.filter(project=project).count()
+    total_logs = Log.objects.filter(project=project).count()
+    
+    return render(request, "tracking/edit_project.html", {
+        "project": project,
+        "form": form,
+        "members_count": members_count,
+        "total_logs": total_logs,
+    })
+
+
+@boss_required
+def delete_project_view(request, project_id):
+    """Projekt törlés"""
+    project = get_object_or_404(Project, pk=project_id)
+    if request.method == "POST":
+        project_title = project.title
+        project.delete()
+        messages.success(request, f"'{project_title}' projekt sikeresen törölve.")
+        return redirect("boss_manage_projects")
+    
+    return render(request, "tracking/delete_project.html", {"project": project})
+
+
+@boss_required
+def expenses_view(request):
+    """Kiadások oldal - hónapra lebontott profit oldalsó panel"""
+    today = timezone.now().date()
+    current_month = today.month
+    current_year = today.year
+    
+    # Az aktuális év hónapainak profit adatai az oldalsó panelhez
+    monthly_profits = _yearly_monthly_profits(current_year)
+    
+    month = int(request.GET.get("month", current_month))
+    year = int(request.GET.get("year", current_year))
+    
+    # Kiadások rendezése a kiválasztott hónapra
+    all_expenses = Expense.objects.filter(date__year=year, date__month=month).order_by("-date")
+    total_expense = all_expenses.aggregate(total=Sum("amount"))["total"] or 0
+    
+    # Havi bevétel kiszámítása
+    monthly_revenue = _month_revenue_value(year, month)
+    
+    # Havi profit
+    monthly_profit = monthly_revenue - float(total_expense)
+    
+    # New expense form kezelése
+    form = ExpenseForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        expense = form.save(commit=False)
+        expense.created_by = request.user
+        expense.save()
+        messages.success(request, "Kiadás sikeresen felvéve.")
+        return redirect("expenses")
+    
+    return render(request, "tracking/expenses.html", {
+        "form": form,
+        "month": month,
+        "year": year,
+        "month_name": _month_name(month),
+        "monthly_profits": monthly_profits,
+        "expenses": all_expenses,
+        "total_expense": total_expense,
+        "monthly_revenue": monthly_revenue,
+        "monthly_profit": monthly_profit,
+    })
+
+
+def _monthly_profit(year, month):
+    """Hónapra lebontott bevétel - kiadások = profit diagram"""
+    _, days = monthrange(year, month)
+    labels, values = [], []
+    
+    for day in range(1, days + 1):
+        d = date(year, month, day)
+        rev = 0
+        
+        # Bevétel kiszámítása az adott napra
+        for log in Log.objects.filter(date__date=d).select_related("project"):
+            total_hours = Log.objects.filter(project=log.project).aggregate(t=Sum("hours"))["t"] or 1
+            rev += float(log.hours) / float(total_hours) * float(log.project.revenue)
+        
+        # Kiadások összesen az adott napon
+        expenses = Expense.objects.filter(date=d).aggregate(total=Sum("amount"))["total"] or 0
+        
+        # Profit = bevétel - kiadások
+        profit = rev - float(expenses)
+        
+        labels.append(f"{day}.")
+        values.append(round(profit))
+    
+    return {"labels": labels, "values": values}
+
+
+def _yearly_monthly_profits(year):
+    """Az év összes hónapjának profit adatait visszaadja oldalsó panelhez"""
+    monthly_data = []
+    today = timezone.now().date()
+    
+    for month in range(1, 13):
+        # Havi bevétel
+        revenue = _month_revenue_value(year, month)
+        
+        # Havi kiadások
+        expenses = Expense.objects.filter(date__year=year, date__month=month).aggregate(total=Sum("amount"))["total"] or 0
+        
+        # Havi profit
+        profit = revenue - float(expenses)
+        
+        is_current = (month == today.month and year == today.year)
+        
+        monthly_data.append({
+            "month": month,
+            "month_name": _month_name(month),
+            "revenue": round(revenue),
+            "expenses": round(float(expenses)),
+            "profit": round(profit),
+            "is_current": is_current,
+        })
+    
+    return monthly_data
+
+
+def _month_revenue_value(year, month):
+    """Egy hónap összes bevételét számítja ki"""
+    revenue = 0
+    _, days = monthrange(year, month)
+    
+    for day in range(1, days + 1):
+        d = date(year, month, day)
+        
+        for log in Log.objects.filter(date__date=d).select_related("project"):
+            total_hours = Log.objects.filter(project=log.project).aggregate(t=Sum("hours"))["t"] or 1
+            revenue += float(log.hours) / float(total_hours) * float(log.project.revenue)
+    
+    return revenue
+
+
+@boss_required
+def delete_expense_view(request, expense_id):
+    """Kiadás törlés"""
+    expense = get_object_or_404(Expense, pk=expense_id)
+    if request.method == "POST":
+        expense.delete()
+        messages.success(request, "Kiadás sikeresen törölve.")
+        return redirect("expenses")
+    
+    year = int(request.GET.get("year", timezone.now().year))
+    month = int(request.GET.get("month", timezone.now().month))
+    
+    return render(request, "tracking/delete_expense.html", {
+        "expense": expense,
+        "year": year,
+        "month": month,
+    })

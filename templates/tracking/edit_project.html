@@ -1,0 +1,50 @@
+{% extends "tracking/base.html" %}
+{% block title %}Projekt Szerkesztése – Tracker{% endblock %}
+{% block content %}
+<div class="page-header">
+  <a href="{% url 'boss_manage_projects' %}" class="back-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></a>
+  <div>
+    <div class="page-title">Projekt Szerkesztése</div>
+    <div class="page-subtitle">{{ project.title }}</div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:20px;">
+  <div class="info-grid">
+    <div><div class="info-key">Cég</div><div class="info-value">{{ project.company }}</div></div>
+    <div><div class="info-key">Típus</div><div class="info-value">
+      {% if project.project_type == "video" %}<span class="badge badge-blue">Videós</span>
+      {% elif project.project_type == "photo" %}<span class="badge badge-orange">Fotós</span>
+      {% else %}<span class="badge badge-purple">Mindkettő</span>{% endif %}
+    </div></div>
+    <div><div class="info-key">Státusz</div><div class="info-value">
+      {% if project.is_completed %}<span class="badge badge-green">Kész</span>
+      {% elif project.is_expired %}<span class="badge badge-gray">Lejárt</span>
+      {% else %}<span class="badge badge-blue">Aktív</span>{% endif %}
+    </div></div>
+    <div><div class="info-key">Hozzárendelt dolgozók</div><div class="info-value">{{ members_count }}</div></div>
+    <div><div class="info-key">Logok száma</div><div class="info-value">{{ total_logs }}</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><span class="card-title">Szerkesztés</span></div>
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+      <label class="form-label">{{ form.revenue.label }}</label>
+      {{ form.revenue }}
+      {% if form.revenue.errors %}<span class="form-error">{{ form.revenue.errors.0 }}</span>{% endif %}
+    </div>
+    <div class="form-group">
+      <label class="form-label">{{ form.description.label }}</label>
+      {{ form.description }}
+      {% if form.description.errors %}<span class="form-error">{{ form.description.errors.0 }}</span>{% endif %}
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <button type="submit" class="btn btn-primary">Mentés</button>
+      <a href="{% url 'boss_manage_projects' %}" class="btn btn-ghost">Mégse</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

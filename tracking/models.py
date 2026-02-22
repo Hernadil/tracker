@@ -112,6 +112,49 @@ class Project(models.Model):
             return min(int((done / total) * 100), 100)
         return 0
 
+    def is_boss_done_videos(self):
+        """Boss jelzés: összes video_title kiyomva-e a vágó által"""
+        if self.project_type not in ('video', 'both'):
+            return True  # Ha nincs videó, akkor "done" ebből a szempontból
+        
+        # Csak az ÖSSZES video_title-nek editing_done=True-nak kell lenni
+        all_titles = self.video_titles.all()
+        if not all_titles.exists():
+            return False  # Ha nincs title, még nem kész
+        
+        return all_titles.filter(editing_done=True).count() == all_titles.count()
+
+    def is_boss_done_photos(self):
+        """Boss jelzés: összes fotósnak mindkét processt kitöltötten-e"""
+        if self.project_type not in ('photo', 'both'):
+            return True  # Ha nincs fotó, akkor "done" ebből a szempontból
+        
+        # Meg kell nézni az összes fotónál a logok photo_progress-t
+        photo_logs = self.logs.filter(user__job_role='fotos')
+        if not photo_logs.exists():
+            return False  # Ha nincs fotó log, még nem kész
+        
+        # Összes fotó lognak mindkét processt teljesítenie kell
+        for log in photo_logs:
+            try:
+                p = log.photo_progress
+                if not (p.fieldwork_done and p.editing_done):
+                    return False
+            except:
+                return False  # Ha nincs photo_progress, nem kész
+        
+        return True
+
+    def is_boss_done(self):
+        """Boss jelzés: a projekt végzett-e (videó és/vagy fotó feltételei teljesültek)"""
+        # Videó projekt típusok
+        video_check = self.is_boss_done_videos()
+        # Fotó projekt típusok
+        photo_check = self.is_boss_done_photos()
+        
+        # Mindkettő feltételének teljesülnie kell az adott típushoz
+        return video_check and photo_check
+
     def __str__(self):
         return f"{self.title} – {self.company}"
 
@@ -173,3 +216,16 @@ class PhotoLogProgress(models.Model):
 
     def __str__(self):
         return f"Photo progress for log {self.log.id}"
+
+
+class Expense(models.Model):
+    amount = models.DecimalField(max_digits=12, decimal_places=0)
+    description = models.CharField(max_length=255)
+    date = models.DateField(auto_now_add=True)
+    created_by = models.ForeignKey(
+        'CustomUser', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='created_expenses'
+    )
+
+    def __str__(self):
+        return f"Kiadás: {self.amount} Ft - {self.description}"

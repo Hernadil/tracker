@@ -20,8 +20,11 @@
       <span>{{ user.get_full_name|default:user.username }}</span>
       <span class="user-role-tag">{{ user.get_job_role_display_hu }}</span>
     </div>
-    {% if user.is_boss %}<a href="{% url 'boss_dashboard' %}" class="btn btn-ghost btn-sm">Boss</a>{% endif %}
-    <a href="{% url 'my_projects' %}" class="btn btn-ghost btn-sm">Projektjeim</a>
+    {% if user.is_boss %}
+      <a href="{% url 'boss_dashboard' %}" class="btn btn-ghost btn-sm">Boss Panel</a>
+    {% else %}
+      <a href="{% url 'my_projects' %}" class="btn btn-ghost btn-sm">Projektjeim</a>
+    {% endif %}
     <a href="{% url 'password_change' %}" class="btn btn-ghost btn-sm">Jelszó</a>
     <a href="{% url 'logout' %}" class="btn btn-secondary btn-sm">Kilépés</a>
   </div>

@@ -1,0 +1,38 @@
+{% extends "tracking/base.html" %}
+{% block title %}Kiadás Törlése – Tracker{% endblock %}
+{% block content %}
+<div class="page-header">
+  <a href="{% url 'expenses' %}?month={{ month }}&year={{ year }}" class="back-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></a>
+  <div>
+    <div class="page-title">Kiadás Törlése</div>
+    <div class="page-subtitle">{{ expense.description }}</div>
+  </div>
+</div>
+
+<div class="card" style="background-color: rgba(255, 59, 48, 0.1); border-left: 4px solid #ff3b30; margin-bottom:20px;">
+  <div style="padding: 16px;">
+    <div style="font-weight: 600; color: #ff3b30; margin-bottom: 8px;">⚠️ Figyelem!</div>
+    <p style="margin: 0; font-size: 0.95rem;">
+      A kiadás törlése végérvényes.
+    </p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><span class="card-title">Kiadás Információ</span></div>
+  <div class="info-grid">
+    <div><div class="info-key">Leírás</div><div class="info-value">{{ expense.description }}</div></div>
+    <div><div class="info-key">Összeg</div><div class="info-value">{{ expense.amount }} Ft</div></div>
+    <div><div class="info-key">Dátum</div><div class="info-value">{{ expense.date|date:"Y. m. d." }}</div></div>
+    <div><div class="info-key">Felvevő</div><div class="info-value">{{ expense.created_by.get_full_name|default:expense.created_by.username }}</div></div>
+  </div>
+</div>
+
+<div style="margin-top: 20px;">
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger" onclick="return confirm('Biztosan törölni szeretnéd ezt a kiadást?')">Igen, törlöm</button>
+    <a href="{% url 'expenses' %}?month={{ month }}&year={{ year }}" class="btn btn-ghost">Mégse</a>
+  </form>
+</div>
+{% endblock %}

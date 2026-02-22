@@ -15,17 +15,19 @@
 </div>
 <div class="table-wrap">
   <table class="data-table">
-    <thead><tr><th>Név</th><th>Munkakör</th><th>Havi órák</th><th>Havi bevétel</th></tr></thead>
+    <thead><tr><th>Név</th><th>Munkakör</th><th>Havi órák</th><th>Műveletek</th></tr></thead>
     <tbody>
       {% for item in employee_data %}
-      <tr class="clickable" onclick="location='{% url 'employee_detail' item.employee.pk %}'">
-        <td><strong>{{ item.employee.get_full_name|default:item.employee.username }}</strong></td>
+      <tr onclick="location='{% url 'employee_detail' item.employee.pk %}'" class="clickable">
+        <td onclick="event.stopPropagation();"><strong>{{ item.employee.get_full_name|default:item.employee.username }}</strong></td>
         <td>
           <span class="badge badge-gray">{{ item.employee.get_job_role_display_hu }}</span>
           {% if item.employee.is_boss %}<span class="badge badge-orange" style="margin-left:4px;">Boss</span>{% endif %}
         </td>
         <td>{{ item.monthly_hours }} h</td>
-        <td>{{ item.monthly_revenue|default:0 }} Ft</td>
+        <td onclick="event.stopPropagation();">
+          <a href="{% url 'delete_employee' item.employee.pk %}" class="btn btn-sm btn-danger">Törlés</a>
+        </td>
       </tr>
       {% empty %}
       <tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:32px;">Nincs találat</td></tr>

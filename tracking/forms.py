@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
-from .models import CustomUser, Project, Log, VideoTitle
+from .models import CustomUser, Project, Log, VideoTitle, Expense
 
 
 class LoginForm(AuthenticationForm):
@@ -78,6 +78,33 @@ class CreateProjectForm(forms.ModelForm):
             'photo_editing_deadline': 'Fotó szerkesztési határidő',
             'onsite_hours': 'Helyszíni órák', 'total_hours_expected': 'Összes elvárható óra',
         }
+        
+    def clean(self):
+        cleaned_data = super().clean()
+        project_type = cleaned_data.get('project_type')
+        both_types = cleaned_data.get('both_types')
+        required_video_count = cleaned_data.get('required_video_count')
+        
+        # Ha fotó csak projektről van szó, a videók száma nem szükséges
+        if project_type == 'photo' and not both_types:
+            if required_video_count is None or required_video_count == 0:
+                cleaned_data['required_video_count'] = 0
+        
+        return cleaned_data
+
+
+class EditProjectForm(forms.ModelForm):
+    class Meta:
+        model = Project
+        fields = ['revenue', 'description']
+        widgets = {
+            'revenue': forms.NumberInput(attrs={'class': 'form-input', 'placeholder': '0'}),
+            'description': forms.Textarea(attrs={'class': 'form-input', 'rows': 3, 'placeholder': 'Rövid leírás'}),
+        }
+        labels = {
+            'revenue': 'Teljes bevétel (Ft)',
+            'description': 'Leírás',
+        }
 
 
 class NewLogForm(forms.ModelForm):
@@ -89,3 +116,17 @@ class NewLogForm(forms.ModelForm):
             'comment': forms.Textarea(attrs={'class': 'form-input', 'rows': 3, 'placeholder': 'Megjegyzés (opcionális)'}),
         }
         labels = {'hours': 'Ledolgozott órák', 'comment': 'Megjegyzés'}
+
+
+class ExpenseForm(forms.ModelForm):
+    class Meta:
+        model = Expense
+        fields = ['amount', 'description']
+        widgets = {
+            'amount': forms.NumberInput(attrs={'class': 'form-input', 'placeholder': '0'}),
+            'description': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Kiadás leírása'}),
+        }
+        labels = {
+            'amount': 'Összeg (Ft)',
+            'description': 'Leírás',
+        }

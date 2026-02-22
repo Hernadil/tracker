@@ -25,7 +25,7 @@
     <div class="form-group"><label class="form-label">{{ form.location.label }}</label>{{ form.location }}</div>
   </div>
   <div class="form-row">
-    <div class="form-group"><label class="form-label">{{ form.required_video_count.label }}</label>{{ form.required_video_count }}</div>
+    <div class="form-group" id="video_count_field"><label class="form-label">{{ form.required_video_count.label }}</label>{{ form.required_video_count }}</div>
     <div class="form-group"><label class="form-label">{{ form.total_hours_expected.label }}</label>{{ form.total_hours_expected }}</div>
   </div>
   <div class="form-group"><label class="form-label">{{ form.onsite_hours.label }}</label>{{ form.onsite_hours }}</div>
@@ -58,12 +58,20 @@ function updateDeadlineSections() {
   const both = document.getElementById("id_both_types");
   const vd = document.getElementById("video_deadlines");
   const pd = document.getElementById("photo_deadlines");
+  const vc = document.getElementById("video_count_field");
   if (!sel) return;
-  if (both && both.checked) { vd.style.display = "block"; pd.style.display = "block"; sel.disabled = true; return; }
+  if (both && both.checked) { 
+    vd.style.display = "block"; 
+    pd.style.display = "block"; 
+    sel.disabled = true;
+    if (vc) vc.style.display = "block";
+    return; 
+  }
   if (both) sel.disabled = false;
   const v = sel.value;
   vd.style.display = (v === "video" || v === "both") ? "block" : "none";
   pd.style.display = (v === "photo" || v === "both") ? "block" : "none";
+  if (vc) vc.style.display = (v === "video" || v === "both") ? "block" : "none";
 }
 document.addEventListener("DOMContentLoaded", function() {
   updateDeadlineSections();

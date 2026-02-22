@@ -143,6 +143,7 @@ textarea.form-input{resize:vertical;min-height:80px}
 .confirm-box p{margin-bottom:14px;font-size:0.9rem}
 .title-entry{display:flex;gap:8px;align-items:center;margin-bottom:6px}
 .title-entry input{flex:1}
+.action-buttons{display:flex;gap:6px;flex-wrap:wrap}
 .role-iro{color:var(--accent-purple)}
 .role-fotos{color:var(--accent-orange)}
 .role-videos{color:var(--accent-blue)}

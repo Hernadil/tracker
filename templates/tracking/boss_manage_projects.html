@@ -1,0 +1,68 @@
+{% extends "tracking/base.html" %}
+{% block title %}Projektek Kezelése – Boss{% endblock %}
+{% block content %}
+<div class="page-header">
+  <a href="{% url 'boss_dashboard' %}" class="back-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></a>
+  <div>
+    <div class="page-title">Projektek Kezelése</div>
+    <div class="page-subtitle">Szerkesztés és törlés</div>
+  </div>
+</div>
+
+{% if active_data %}
+<div class="section-header"><span class="section-title">Futó Projektek</span></div>
+<div class="table-wrap">
+  <table class="data-table">
+    <thead><tr><th>Cím</th><th>Cég</th><th>Bevétel</th><th>Óra</th><th>Műveletek</th></tr></thead>
+    <tbody>
+      {% for item in active_data %}
+      <tr>
+        <td><strong>{{ item.project.title }}</strong></td>
+        <td>{{ item.project.company }}</td>
+        <td>{{ item.project.revenue }} Ft</td>
+        <td>{{ item.total_hours }} h</td>
+        <td>
+          <div class="action-buttons">
+            <a href="{% url 'edit_project' item.project.pk %}" class="btn btn-sm btn-ghost">Szerkesztés</a>
+            <a href="{% url 'delete_project' item.project.pk %}" class="btn btn-sm btn-danger">Törlés</a>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state" style="margin-top:20px;">
+  <p>Nincsenek futó projektek</p>
+</div>
+{% endif %}
+
+{% if completed_data %}
+<div class="section-header" style="margin-top:32px;"><span class="section-title">Kész Projektek</span></div>
+<div class="table-wrap">
+  <table class="data-table">
+    <thead><tr><th>Cím</th><th>Cég</th><th>Bevétel</th><th>Óra</th><th>Műveletek</th></tr></thead>
+    <tbody>
+      {% for item in completed_data %}
+      <tr>
+        <td><strong>{{ item.project.title }}</strong></td>
+        <td>{{ item.project.company }}</td>
+        <td>{{ item.project.revenue }} Ft</td>
+        <td>{{ item.total_hours }} h</td>
+        <td>
+          <div class="action-buttons">
+            <a href="{% url 'delete_project' item.project.pk %}" class="btn btn-sm btn-danger">Törlés</a>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state" style="margin-top:20px;">
+  <p>Nincsenek kész projektek</p>
+</div>
+{% endif %}
+{% endblock %}

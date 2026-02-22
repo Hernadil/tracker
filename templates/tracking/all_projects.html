@@ -10,10 +10,10 @@
 </div>
 <div class="table-wrap">
   <table class="data-table">
-    <thead><tr><th>Cím</th><th>Cég</th><th>Típus</th><th>Határidő</th><th>Óra</th><th>Bevétel</th><th>Státusz</th></tr></thead>
+    <thead><tr><th>Cím</th><th>Cég</th><th>Típus</th><th>Határidő</th><th>Óra</th><th>Bevétel</th><th>Státusz</th><th>Műveletek</th></tr></thead>
     <tbody>
       {% for item in project_data %}
-      <tr class="clickable {% if item.project.is_expired %}expired{% endif %}" onclick="location='{% url 'boss_project_view' item.project.pk %}'">
+      <tr onclick="{% if not item.project.is_completed %}location='{% url 'boss_project_view' item.project.pk %}'{% endif %}" class="{% if item.project.is_completed %}completed-row{% else %}clickable{% endif %}">
         <td><strong>{{ item.project.title }}</strong></td>
         <td>{{ item.project.company }}</td>
         <td>
@@ -26,14 +26,30 @@
         <td>{{ item.project.revenue }} Ft</td>
         <td>
           {% if item.project.is_expired %}<span class="badge badge-gray">Lejárt</span>
-          {% elif item.project.is_completed %}<span class="badge badge-green">Kész</span>
+          {% elif item.project.is_completed %}<span class="badge badge-green">✓ Lezárva</span>
+          {% elif item.project.is_boss_done %}<span class="badge badge-green">✓ Kész</span>
           {% else %}<span class="badge badge-blue">Aktív</span>{% endif %}
+        </td>
+        <td onclick="event.stopPropagation();">
+          {% if item.project.is_completed and not item.project.is_expired %}
+          <a href="{% url 'delete_project' item.project.pk %}" class="btn btn-sm btn-danger">Törlés</a>
+          {% endif %}
         </td>
       </tr>
       {% empty %}
-      <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:32px;">Nincs projekt</td></tr>
+      <tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:32px;">Nincs projekt</td></tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
+
+<style>
+.data-table tbody tr.completed-row {
+  cursor: default;
+}
+
+.data-table tbody tr.completed-row:hover {
+  background: inherit;
+}
+</style>
 {% endblock %}

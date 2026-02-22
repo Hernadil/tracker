@@ -26,14 +26,20 @@
   </a>
   <a href="{% url 'all_projects' %}" class="card card-clickable">
     <div class="card-header"><span class="card-title">Projektek mutatása</span><span>&#8594;</span></div>
-    <div class="card-meta">Összes projekt áttekintése</div>
+    <div class="card-meta">Összes projekt áttekintése és törlése</div>
   </a>
 </div>
 <div class="grid-2">
+  <a href="{% url 'expenses' %}" class="card card-clickable">
+    <div class="card-header"><span class="card-title">Kiadások</span><span>&#8594;</span></div>
+    <div class="card-meta">Kiadások és profit nyomon követés</div>
+  </a>
   <a href="{% url 'new_employee' %}" class="card card-clickable">
     <div class="card-header"><span class="card-title">+ Új dolgozó felvétele</span><span>&#8594;</span></div>
     <div class="card-meta">Új munkatárs hozzáadása</div>
   </a>
+</div>
+<div class="grid-2">
   <a href="{% url 'create_project' %}" class="card card-clickable">
     <div class="card-header"><span class="card-title">+ Projekt létrehozása</span><span>&#8594;</span></div>
     <div class="card-meta">Új projekt indítása</div>
