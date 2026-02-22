@@ -8,14 +8,17 @@
     <div class="page-subtitle">{{ employee_data|length }} fő</div>
   </div>
 </div>
+<div style="display: flex; gap: 10px; margin-bottom: 20px;">
+  <a href="{% url 'new_employee' %}" class="btn btn-primary" style="flex: 1; justify-content: center;">+ Új dolgozó felvétele</a>
+</div>
 <div class="search-wrap">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
   <input type="text" class="search-input" id="empSearch" placeholder="Dolgozó keresése..." value="{{ query }}" autocomplete="off">
   <div class="autocomplete-dropdown" id="acDropdown"></div>
 </div>
 <div class="table-wrap">
-  <table class="data-table">
-    <thead><tr><th>Név</th><th>Munkakör</th><th>Havi órák</th><th>Műveletek</th></tr></thead>
+  <table class="data-table employees-table">
+    <thead><tr><th>Név</th><th>Munkakör</th><th style="display:none;">Havi órák</th><th>Műveletek</th></tr></thead>
     <tbody>
       {% for item in employee_data %}
       <tr onclick="location='{% url 'employee_detail' item.employee.pk %}'" class="clickable">
@@ -24,7 +27,7 @@
           <span class="badge badge-gray">{{ item.employee.get_job_role_display_hu }}</span>
           {% if item.employee.is_boss %}<span class="badge badge-orange" style="margin-left:4px;">Boss</span>{% endif %}
         </td>
-        <td>{{ item.monthly_hours }} h</td>
+        <td style="display:none;">{{ item.monthly_hours }} h</td>
         <td onclick="event.stopPropagation();">
           <a href="{% url 'delete_employee' item.employee.pk %}" class="btn btn-sm btn-danger">Törlés</a>
         </td>

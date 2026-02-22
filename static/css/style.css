@@ -8,6 +8,7 @@
   --shadow:0 8px 24px rgba(0,0,0,0.4);--radius:10px;--radius-sm:6px;--transition:0.18s ease
 }
 html{font-size:16px}
+@media(max-width:600px){html{font-size:14px}}
 body{background:var(--bg-primary);color:var(--text-primary);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Inter',Roboto,sans-serif;line-height:1.6;min-height:100vh}
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-track{background:var(--bg-primary)}
@@ -22,10 +23,13 @@ body{background:var(--bg-primary);color:var(--text-primary);font-family:-apple-s
 .navbar-user{display:flex;align-items:center;gap:10px;padding:6px 12px;background:var(--bg-tertiary);border-radius:var(--radius-sm);font-size:0.875rem;color:var(--text-secondary)}
 .user-role-tag{font-size:0.75rem;color:var(--accent-blue);background:rgba(88,166,255,0.12);padding:2px 8px;border-radius:12px}
 .page-header{display:flex;align-items:center;gap:14px;margin-bottom:28px}
+@media(max-width:600px){.page-header{gap:10px;margin-bottom:20px}}
 .back-btn{display:flex;align-items:center;justify-content:center;width:36px;height:36px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);text-decoration:none;transition:var(--transition);flex-shrink:0}
+@media(max-width:600px){.back-btn{width:32px;height:32px}}
 .back-btn:hover{background:var(--bg-hover);color:var(--text-primary);border-color:var(--accent-blue)}
 .back-btn svg{width:16px;height:16px}
 .page-title{font-size:1.4rem;font-weight:700;color:var(--text-primary);letter-spacing:-0.4px}
+@media(max-width:600px){.page-title{font-size:1.1rem}}
 .page-subtitle{font-size:0.875rem;color:var(--text-secondary);margin-top:2px}
 .card{background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:var(--transition)}
 .card-clickable{cursor:pointer;text-decoration:none;display:block;color:inherit}
@@ -74,7 +78,7 @@ select.form-input{cursor:pointer}
 textarea.form-input{resize:vertical;min-height:80px}
 .form-checkbox{width:17px;height:17px;accent-color:var(--accent-blue);cursor:pointer}
 .form-row{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
-@media(max-width:600px){.form-row{grid-template-columns:1fr}}
+@media(max-width:600px){.form-row{grid-template-columns:1fr;gap:12px}}
 .form-section{background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:18px}
 .form-section-title{font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent-blue);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border-subtle)}
 .form-actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
@@ -102,6 +106,7 @@ textarea.form-input{resize:vertical;min-height:80px}
 .chart-title{font-size:0.9rem;font-weight:600;color:var(--text-primary)}
 .chart-nav{display:flex;align-items:center;gap:8px}
 .chart-nav span{font-size:0.85rem;color:var(--text-secondary);min-width:120px;text-align:center;font-weight:600}
+@media(max-width:600px){.chart-header{flex-direction:column;gap:12px;align-items:flex-start}.chart-nav{width:100%;justify-content:flex-start}.chart-nav span{min-width:auto}}
 .search-wrap{position:relative;margin-bottom:20px}
 .search-wrap svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-muted);pointer-events:none}
 .search-input{width:100%;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px 10px 40px;color:var(--text-primary);font-size:0.9rem;outline:none;transition:var(--transition)}
@@ -144,13 +149,42 @@ textarea.form-input{resize:vertical;min-height:80px}
 .title-entry{display:flex;gap:8px;align-items:center;margin-bottom:6px}
 .title-entry input{flex:1}
 .action-buttons{display:flex;gap:6px;flex-wrap:wrap}
+@media(max-width:600px){
+  .action-buttons{flex-direction:column}
+  .grid-2{grid-template-columns:1fr}
+  .data-table th,.data-table td{padding:10px 12px;font-size:0.8rem}
+  .btn-sm{padding:5px 10px;font-size:0.75rem}
+  .form-actions{flex-direction:column}
+  .form-actions .btn{width:100%}
+}
 .role-iro{color:var(--accent-purple)}
 .role-fotos{color:var(--accent-orange)}
 .role-videos{color:var(--accent-blue)}
 .role-vago{color:var(--accent-green)}
-@media(max-width:768px){
-  .page-container,.page-container-sm{padding:16px 14px}
-  .page-title{font-size:1.2rem}
+@media(max-width:700px){
+  .page-container,.page-container-sm{padding:12px 12px}
+  .page-header{margin-bottom:16px;padding:0}
+  .chart-container{padding:12px;margin-bottom:16px}
+  .chart-header{flex-direction:column;gap:8px;align-items:flex-start}
+  .chart-container>div[style]{width:100%!important}
+  .grid-2{gap:10px;margin-bottom:16px}
+  .card{padding:12px}
+  .expenses-container{flex-direction:column;gap:0;overflow-x:hidden}
+  .expenses-main{display:contents}
+  .expenses-container .page-header{order:-1;margin-bottom:16px;padding:0 10px}
+  .expenses-sidebar{width:100%!important;flex-shrink:auto!important;margin-bottom:16px;order:0}
+  .expenses-sidebar>div{position:static!important;top:auto!important;padding:8px!important}
+  .expenses-sidebar>div>div:first-child{font-size:0.65rem!important;margin-bottom:6px!important}
+  .expenses-container .grid-2{gap:10px;margin-bottom:16px!important;margin-left:0!important;margin-right:0!important;max-width:none!important;width:100%;padding:0 10px;order:1;box-sizing:border-box}
+  .expenses-container .card{order:1!important;width:100%!important;max-width:none!important;margin:0!important;padding:12px 10px!important;box-sizing:border-box;margin-bottom:16px!important}
+  .expenses-container .section-header{order:1;margin:0 10px;margin-top:16px}
+  .expenses-container .table-wrap{order:1;margin:0 10px}
+  .expenses-container .empty-state{order:1;margin:0 10px}
+  .data-table th:nth-child(2),.data-table td:nth-child(2),.data-table th:nth-child(4),.data-table td:nth-child(4){display:none}
+  .employees-table th:nth-child(2),.employees-table td:nth-child(2),.employees-table th:nth-child(4),.employees-table td:nth-child(4){display:table-cell!important}
+  .employees-table th:nth-child(3),.employees-table td:nth-child(3){display:none}
+  .monthly-list{max-height:auto;overflow:visible}
+  .page-title{font-size:1.1rem}
   .stats-row{gap:8px}
   .stat-card{min-width:100px;padding:12px}
   .navbar{padding:0 14px}

@@ -8,23 +8,26 @@
     <div class="page-subtitle">{{ project_data|length }} projekt</div>
   </div>
 </div>
+<div style="display: flex; gap: 10px; margin-bottom: 20px;">
+  <a href="{% url 'create_project' %}" class="btn btn-primary" style="flex: 1; justify-content: center;">+ Projekt létrehozása</a>
+</div>
 <div class="table-wrap">
   <table class="data-table">
-    <thead><tr><th>Cím</th><th>Cég</th><th>Típus</th><th>Határidő</th><th>Óra</th><th>Bevétel</th><th>Státusz</th><th>Műveletek</th></tr></thead>
+    <thead><tr><th>Cím</th><th>Cég</th><th style="display:none;">Típus</th><th style="display:none;">Határidő</th><th>Óra</th><th>Bevétel</th><th style="display:none;">Státusz</th><th>Műveletek</th></tr></thead>
     <tbody>
       {% for item in project_data %}
       <tr onclick="{% if not item.project.is_completed %}location='{% url 'boss_project_view' item.project.pk %}'{% endif %}" class="{% if item.project.is_completed %}completed-row{% else %}clickable{% endif %}">
         <td><strong>{{ item.project.title }}</strong></td>
         <td>{{ item.project.company }}</td>
-        <td>
+        <td style="display:none;">
           {% if item.project.project_type == "video" %}<span class="badge badge-blue">Videós</span>
           {% elif item.project.project_type == "photo" %}<span class="badge badge-orange">Fotós</span>
           {% else %}<span class="badge badge-purple">Mindkettő</span>{% endif %}
         </td>
-        <td>{{ item.project.main_deadline|default:"–" }}</td>
+        <td style="display:none;">{{ item.project.main_deadline|default:"–" }}</td>
         <td>{{ item.total_hours }} h</td>
         <td>{{ item.project.revenue }} Ft</td>
-        <td>
+        <td style="display:none;">
           {% if item.project.is_expired %}<span class="badge badge-gray">Lejárt</span>
           {% elif item.project.is_completed %}<span class="badge badge-green">✓ Lezárva</span>
           {% elif item.project.is_boss_done %}<span class="badge badge-green">✓ Kész</span>

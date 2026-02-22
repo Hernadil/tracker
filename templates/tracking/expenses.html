@@ -1,9 +1,9 @@
 {% extends "tracking/base.html" %}
 {% block title %}Kiadások – Tracker{% endblock %}
 {% block content %}
-<div style="display: flex; gap: 20px; align-items: flex-start;">
+<div style="display: flex; gap: 20px; align-items: flex-start;" class="expenses-container">
   <!-- Oldalsó Panel - Hónapokra lebontott profit -->
-  <div style="width: 280px; flex-shrink: 0;">
+  <div style="width: 280px; flex-shrink: 0;" class="expenses-sidebar">
     <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; position: sticky; top: 80px;">
       <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px;">{{ year }}. Év</div>
       <div class="monthly-list">
@@ -32,7 +32,7 @@
   </div>
 
   <!-- Fő tartalom -->
-  <div style="flex: 1;">
+  <div style="flex: 1;" class="expenses-main">
     <div class="page-header">
       <a href="{% url 'boss_dashboard' %}" class="back-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></a>
       <div>
@@ -129,15 +129,38 @@
   overflow-y: auto;
 }
 
-@media (max-width: 1000px) {
-  .monthly-list {
-    max-height: 100%;
+@media (max-width: 768px) {
+  .monthly-item {
+    padding: 6px 8px;
+    margin-bottom: 6px;
+    line-height: 1.2;
   }
   
-  /* Pequeño cambio para display flex cuando hay poco espacio */
-  div[style*="display: flex"] > div:first-child {
-    width: auto !important;
-    position: static !important;
+  .monthly-item span {
+    font-size: 0.7rem !important;
+  }
+  
+  .monthly-item > div {
+    margin-bottom: 2px !important;
+    line-height: 1.1;
+  }
+  
+  .monthly-item > div:last-child {
+    padding-top: 2px !important;
+  }
+  
+  .monthly-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-height: auto;
+    overflow: visible;
+  }
+  
+  .monthly-item {
+    flex: 1;
+    min-width: 80px;
+    margin-bottom: 0;
   }
 }
 </style>
